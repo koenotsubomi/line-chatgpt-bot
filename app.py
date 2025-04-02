@@ -49,24 +49,23 @@ def webhook():
 
 @handler.add(FollowEvent)
 def handle_follow(event):
-    text = (
+    text = TextSendMessage(text=(
         "🌱こえのつぼみへようこそ🌱\n\n"
         "ご登録ありがとうございます✨\n\n"
         "あなたが「話してみよう」と\n"
         "一歩踏み出されたこと\n"
         "とても素晴らしいことです🌷\n\n"
         "ここはママの心がふっと軽くなる\n"
-        "❛やさしい場❜\n"
+        "“やさしい場”\n"
         "でありたいと思っています😊\n\n"
         "まずはあなたに合った\n"
         "「お話スタイル」を\n"
         "選んでみてください🍀\n\n"
         "あなたの思いを\n"
-        "たくさんこぼしてください☕\n\n"
-    )
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=text))
+        "たくさんこぼしてください☕"
+    ))
 
-    course_flex = FlexSendMessage(
+    flex = FlexSendMessage(
         alt_text="お話スタイルを選んでください",
         contents={
             "type": "bubble",
@@ -84,7 +83,8 @@ def handle_follow(event):
             }
         }
     )
-    line_bot_api.push_message(event.source.user_id, course_flex)
+
+    line_bot_api.reply_message(event.reply_token, [text, flex])
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
@@ -107,7 +107,6 @@ def handle_message(event):
     courses = load_courses()
     selected = courses.get(user_id, "sotto")
 
-    # コース別 system プロンプト
     prompts = {
         "sotto": "あなたは、子育てに疲れたママの声をそっと受け止めるやさしい聞き役です。否定せず、共感の言葉を短く返してください。",
         "yorisoi": "あなたは、がんばっているママを見守り、行動や想いを褒めるカウンセラーです。相手の努力や気持ちを認めて返してください。",
@@ -137,4 +136,5 @@ def handle_message(event):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 

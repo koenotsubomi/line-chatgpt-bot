@@ -3,9 +3,12 @@ import os
 import openai
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import (
+    MessageEvent, TextMessage, TextSendMessage,
+    FollowEvent, FlexSendMessage
+)
 
-app = Flask(__name__)  # ← ここを先に！
+app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def index():
@@ -30,10 +33,66 @@ def webhook():
         abort(400)
     return 'OK'
 
+@handler.add(FollowEvent)
+def handle_follow(event):
+    # 登録お礼メッセージ
+    text = (
+        "🌱こえのつぼみへようこそ🌱\n"
+        "ご登録ありがとうございます✨\n\n"
+        "あなたが「話してみよう」と、一歩踏み出されたこと、\n"
+        "とても素晴らしいことです🌷\n\n"
+        "ここは、ママの心がふっと軽くなるような、やさしい場所でありたいと思っています😊\n\n"
+        "まずは、あなたに合った「お話スタイル」を選んでみてください🍀\n"
+        "あなたの思いを、こぼしていいんです。"
+    )
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=text)
+    )
+
+    # Flexメッセージ送信（コース選択ボタン）
+    course_flex = FlexSendMessage(
+        alt_text="お話スタイルを選んでください",
+        contents={
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "md",
+                "contents": [
+                    { "type": "text", "text": "お話スタイルを選んでください", "weight": "bold", "size": "md" },
+                    {
+                        "type": "button",
+                        "action": { "type": "postback", "label": "🌿そっとこぼすコース", "data": "course=sotto" },
+                        "style": "primary"
+                    },
+                    {
+                        "type": "button",
+                        "action": { "type": "postback", "label": "🤝寄り添いコース", "data": "course=yorisoi" },
+                        "style": "primary"
+                    },
+                    {
+                        "type": "button",
+                        "action": { "type": "postback", "label": "🔥喝とやさしいコース", "data": "course=katsu" },
+                        "style": "primary"
+                    },
+                    {
+                        "type": "button",
+                        "action": { "type": "postback", "label": "🌱本気コース", "data": "course=honki" },
+                        "style": "primary"
+                    }
+                ]
+            }
+        }
+    )
+
+    line_bot_api.push_message(event.source.user_id, course_flex)
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_message = event.message.text
-    
+
     # ChatGPTに問い合わせ
     try:
         response = openai.ChatCompletion.create(
@@ -56,5 +115,3 @@ def handle_message(event):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-

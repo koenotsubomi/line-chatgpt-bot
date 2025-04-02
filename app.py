@@ -45,6 +45,7 @@ def handle_message(event):
         )
         reply_text = response.choices[0].message['content'].strip()
     except Exception as e:
+        print(f"ChatGPT API error: {e}")
         reply_text = "ごめんなさい、少し時間をおいて再度お試しください。"
 
     line_bot_api.reply_message(

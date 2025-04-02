@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def index():
-    return "こえのつぼみLINEボットは正常に動作しています🌱"
+    return "こえのつぼみLINEボットは正常に動作しています\U0001F331"
 
 # 環境変数からAPIキー等を取得
 LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
@@ -57,17 +57,17 @@ def webhook():
 @handler.add(FollowEvent)
 def handle_follow(event):
     text = TextSendMessage(text=(
-        "🌱こえのつぼみへようこそ🌱\n\n"
+        "\U0001F331こえのつぼみへようこそ\U0001F331\n\n"
         "ご登録ありがとうございます✨\n\n"
         "あなたが「話してみよう」と\n"
         "一歩踏み出されたこと\n"
-        "とても素晴らしいことです🌷\n\n"
+        "とても素晴らしいことです\U0001F337\n\n"
         "ここはママの心がふっと軽くなる\n"
         "❛やさしい場❜\n"
         "でありたいと思っています😊\n\n"
         "まずはあなたに合った\n"
         "「お話スタイル」を\n"
-        "選んでみてください🍀\n\n"
+        "選んでみてください\uD83C\uDFE0\n\n"
         "あなたの思いを\n"
         "たくさんこぼしてください☕"
     ))
@@ -81,11 +81,11 @@ def handle_follow(event):
                 "layout": "vertical",
                 "spacing": "md",
                 "contents": [
-                    { "type": "text", "text": "お話スタイルを選んでください", "weight": "bold", "size": "md" },
-                    { "type": "button", "action": { "type": "postback", "label": "☕そっとこぼす", "data": "course=sotto" }, "style": "primary" },
-                    { "type": "button", "action": { "type": "postback", "label": "🤝寄り添い", "data": "course=yorisoi" }, "style": "primary" },
-                    { "type": "button", "action": { "type": "postback", "label": "🔥喝とやさしい", "data": "course=katsu" }, "style": "primary" },
-                    { "type": "button", "action": { "type": "postback", "label": "🌈本気", "data": "course=honki" }, "style": "primary" }
+                    {"type": "text", "text": "お話スタイルを選んでください", "weight": "bold", "size": "md"},
+                    {"type": "button", "action": {"type": "postback", "label": "☕そっとこぼす", "data": "course=sotto"}, "style": "primary"},
+                    {"type": "button", "action": {"type": "postback", "label": "🤝寄り添い", "data": "course=yorisoi"}, "style": "primary"},
+                    {"type": "button", "action": {"type": "postback", "label": "🔥喝とやさしい", "data": "course=katsu"}, "style": "primary"},
+                    {"type": "button", "action": {"type": "postback", "label": "🌈本気", "data": "course=honki"}, "style": "primary"}
                 ]
             }
         }
@@ -113,7 +113,7 @@ def handle_postback(event):
 
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=f"{selected_label} コースを選択しました。\n\nいつでも話しかけてくださいね🐤")
+            TextSendMessage(text=f"{selected_label} コースを選択しました。\n\nいつでも話しかけてくださいね\U0001F424")
         )
 
 @handler.add(MessageEvent, message=TextMessage)
@@ -125,19 +125,22 @@ def handle_message(event):
 
     prompts = {
         "sotto": "あなたは、話相手にそっと寄り添うママ友です。頑張っていることを褒め、否定せず、短い言葉でママが安心する言葉を返してください。",
-        "yorisoi": "あなたは、がんばっているママを見守り、行動や想いを褒めるママ友です。相手の努力や気持ちを認めてやさしく返してください。悩みを話やすいように促してあげましょう",
+        "yorisoi": "あなたは、がんばっているママを見守り、行動や想いを褒めるママ友です。相手の努力や気持ちを認めてやさしく返してください。悩みを話やすいように促してあげましょう。",
         "katsu": "あなたは、少し元気をなくしているママの背中をやさしく押す応援役です。前向きな一歩を踏み出せるメッセージをやさしく返してください。",
         "honki": "あなたは、人生を変えたいと願うママに寄り添うカウンセラーです。状況を聞き、一緒にやさしく考えていく返答をしてください。"
     }
+
     system_prompt = prompts.get(selected, prompts["sotto"])
+    full_prompt = f"{system_prompt}\nママのつぶやき：『{user_message}』に対して、返事："
 
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ]
+                {"role": "user", "content": full_prompt}
+            ],
+            temperature=0.8,
+            max_tokens=100
         )
         reply_text = response.choices[0].message['content'].strip()
     except Exception as e:
@@ -152,5 +155,4 @@ def handle_message(event):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
 

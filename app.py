@@ -137,10 +137,68 @@ def handle_postback(event):
             TextSendMessage(text=f"{selected_label} コースを選択しました。\n\nいつでも話しかけてくださいね\U0001F424")
         )
 
-# ★ここに会話の切り替えロジック（次ステップで追記します）
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_message = event.message.text
+    user_id = event.source.user_id
+    courses = load_courses()
+    selected = courses.get(user_id, "sotto")
+
+    # ユーザーの発言数を更新＆取得
+    message_count = update_user_history(user_id)
+
+    # 各コースのプロンプト切り替え
+    if selected == "sotto":
+        if message_count == 1:
+            prompt = 'あなたは、話相手にそっと寄り添うママ友です。ママがつぶやいた一言に共感し、「よかったら、もう少し聞かせてね☕」などのやさしい促しを文末に添えてください。アドバイスは不要です。短くてやわらかい言葉にしてください。絵文字は🌷☕😊などを少しだけ。'
+        else:
+            prompt = 'あなたは、ママの話をそっと聞いてくれるママ友です。相手の言葉を否定せずに共感し、「そっか…そんなことがあったんだね☁️」や「自分を責めたりしてない？」など自然な問いかけを含んだ返事を短く返してください。絵文字は🌷☕😊などを少しだけ。'
+
+    elif selected == "yorisoi":
+        if message_count == 1:
+            prompt = 'あなたは、がんばっているママを見守るママ友です。ママの努力を認め、「よかったらもう少し聞かせてね🍀」などのやさしい促しを添えてください。絵文字は🫶🍀🌷などを少しだけ使ってください。'
+        else:
+            prompt = 'あなたは、ママの想いに寄り添って話を聞くママ友です。「それだけがんばってたんだね🍀」「今日あったこと、よかったらもう少し聞かせて」など、共感しながら自然な問いかけを短く返してください。絵文字はやさしいものを少しだけ。'
+
+    elif selected == "katsu":
+        if message_count == 1:
+            prompt = 'あなたは、少し元気をなくしているママの背中をやさしく押すママ友です。「大丈夫」「そのままでいいよ」などの言葉で受け止めつつ、「よかったら少し話してみてね🔥」など前向きな促しを添えてください。絵文字は🔥🌟💪😊などを少しだけ。'
+        else:
+            prompt = 'あなたは、やさしく背中を押すママ友です。相手のがんばりに共感しながら、「それだけ頑張ってたんだね🌟」「どうしたら少しラクになれそう？」など、前向きな問いかけを交えて返してください。'
+
+    elif selected == "honki":
+        if message_count == 1:
+            prompt = 'あなたは、人生を変えたいと願うママに寄り添うカウンセラーです。まずは相手の言葉を受け止め、「よかったら、どんな気持ちだったか聞かせてください🕊️」などのやさしい促しを添えてください。'
+        else:
+            prompt = 'あなたは、ママの深い気持ちに寄り添うカウンセラーです。「その気持ち、大切にしてあげてね📖」「何が一番つらかったかな？」など、ていねいに気持ちを深掘りする問いかけをやさしく返してください。'
+
+    else:
+        prompt = 'あなたは、相手に共感してやさしく返事をするママ友です。短く、否定せず、あたたかい返答をしてください。'
+
+    full_prompt = f"{prompt}\nママのつぶやき：『{user_message}』に対して、返事："
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.8,
+            max_tokens=120
+        )
+        reply_text = response.choices[0].message['content'].strip()
+    except Exception as e:
+        print(f"ChatGPT API error: {e}")
+        reply_text = "ごめんなさい、少し時間をおいて再度お試しください。"
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
+    )
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
 
 

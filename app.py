@@ -28,14 +28,21 @@ COURSE_FILE = "user_courses.json"
 
 # ユーザーコースの読み書き関数
 def load_courses():
-    if not os.path.exists(COURSE_FILE):
+    try:
+        if not os.path.exists(COURSE_FILE):
+            return {}
+        with open(COURSE_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"読み込みエラー: {e}")
         return {}
-    with open(COURSE_FILE, 'r') as f:
-        return json.load(f)
 
 def save_courses(data):
-    with open(COURSE_FILE, 'w') as f:
-        json.dump(data, f)
+    try:
+        with open(COURSE_FILE, 'w') as f:
+            json.dump(data, f)
+    except Exception as e:
+        print(f"保存エラー: {e}")
 
 @app.route("/webhook", methods=['POST'])
 def webhook():
@@ -56,7 +63,7 @@ def handle_follow(event):
         "一歩踏み出されたこと\n"
         "とても素晴らしいことです🌷\n\n"
         "ここはママの心がふっと軽くなる\n"
-        "“やさしい場”\n"
+        "❛やさしい場❜\n"
         "でありたいと思っています😊\n\n"
         "まずはあなたに合った\n"
         "「お話スタイル」を\n"
@@ -95,9 +102,18 @@ def handle_postback(event):
         courses = load_courses()
         courses[user_id] = selected
         save_courses(courses)
+
+        course_names = {
+            "sotto": "☕そっとこぼす",
+            "yorisoi": "🤝寄り添い",
+            "katsu": "🔥喝とやさしい",
+            "honki": "🌈本気"
+        }
+        selected_label = course_names.get(selected, "コース")
+
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=f"「{selected}」コースを選択しました。いつでも話しかけてくださいね🌷")
+            TextSendMessage(text=f"{selected_label} コースを選択しました。いつでも話しかけてくださいね🌷")
         )
 
 @handler.add(MessageEvent, message=TextMessage)

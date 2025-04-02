@@ -113,7 +113,7 @@ def handle_postback(event):
 
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text=f"{selected_label} コースを選択しました。いつでも話しかけてくださいね🌷")
+            TextSendMessage(text=f"{selected_label} コースを選択しました🌸\n\nいつでも話しかけてくださいね🐤")
         )
 
 @handler.add(MessageEvent, message=TextMessage)

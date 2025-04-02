@@ -5,7 +5,11 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
-app = Flask(__name__)
+app = Flask(__name__)  # ← ここを先に！
+
+@app.route("/", methods=["GET"])
+def index():
+    return "こえのつぼみLINEボットは正常に動作しています🌱"
 
 # 環境変数からAPIキー等を取得
 LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
@@ -51,4 +55,5 @@ def handle_message(event):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 

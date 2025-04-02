@@ -50,13 +50,18 @@ def webhook():
 @handler.add(FollowEvent)
 def handle_follow(event):
     text = (
-        "🌱こえのつぼみへようこそ🌱\n"
+        "🌱こえのつぼみへようこそ🌱\n\n"
         "ご登録ありがとうございます✨\n\n"
-        "あなたが「話してみよう」と、一歩踏み出されたこと、\n"
+        "あなたが「話してみよう」と\n"
+        "一歩踏み出されたこと\n"
         "とても素晴らしいことです🌷\n\n"
-        "ここは、ママの心がふっと軽くなるような、やさしい場所でありたいと思っています😊\n\n"
-        "まずは、あなたに合った「お話スタイル」を選んでみてください🍀\n"
-        "あなたの思いを、こぼしていいんです。"
+        "ここはママの心が\n"
+        "ふっと軽くなるような\n"
+        "やさしい場所\n"
+        "でありたいと思っています😊\n\n"
+        "まずは、あなたに合った\n"
+        "「お話スタイル」を選んでみてください🍀\n\n"
+        "あなたの思いはこぼしていいんです"\n"
     )
     line_bot_api.reply_message(event.reply_token, TextSendMessage(text=text))
 
@@ -70,10 +75,10 @@ def handle_follow(event):
                 "spacing": "md",
                 "contents": [
                     { "type": "text", "text": "お話スタイルを選んでください", "weight": "bold", "size": "md" },
-                    { "type": "button", "action": { "type": "postback", "label": "🌿そっとこぼす", "data": "course=sotto" }, "style": "primary" },
+                    { "type": "button", "action": { "type": "postback", "label": "☕そっとこぼす", "data": "course=sotto" }, "style": "primary" },
                     { "type": "button", "action": { "type": "postback", "label": "🤝寄り添い", "data": "course=yorisoi" }, "style": "primary" },
                     { "type": "button", "action": { "type": "postback", "label": "🔥喝とやさしい", "data": "course=katsu" }, "style": "primary" },
-                    { "type": "button", "action": { "type": "postback", "label": "🌱本気", "data": "course=honki" }, "style": "primary" }
+                    { "type": "button", "action": { "type": "postback", "label": "🌈本気", "data": "course=honki" }, "style": "primary" }
                 ]
             }
         }

@@ -37,13 +37,18 @@ def webhook():
 def handle_follow(event):
     # 登録お礼メッセージ
     text = (
-        "🌱こえのつぼみへようこそ🌱\n"
+        "🌱こえのつぼみへようこそ🌱\n\n"
         "ご登録ありがとうございます✨\n\n"
-        "あなたが「話してみよう」と、一歩踏み出されたこと、\n"
+        "あなたが「話してみよう」と\n"
+        "一歩踏み出されたこと\n"
         "とても素晴らしいことです🌷\n\n"
-        "ここは、ママの心がふっと軽くなるような、やさしい場所でありたいと思っています😊\n\n"
-        "まずは、あなたに合った「お話スタイル」を選んでみてください🍀\n"
-        "あなたの思いを、こぼしていいんです。"
+        "ここは、ママの心が\n"
+        "ふっと軽くなるような\n"
+        "やさしい場所\n"
+        "でありたいと思っています😊\n\n"
+        "まずは、あなたに合った\n"
+        "「お話スタイル」を選んでみてください🍀\n\n"
+        "あなたの思いはこぼしていいんです"\n
     )
 
     line_bot_api.reply_message(
@@ -64,7 +69,7 @@ def handle_follow(event):
                     { "type": "text", "text": "お話スタイルを選んでください", "weight": "bold", "size": "md" },
                     {
                         "type": "button",
-                        "action": { "type": "postback", "label": "🌿そっとこぼすコース", "data": "course=sotto" },
+                        "action": { "type": "postback", "label": "☕そっとこぼすコース", "data": "course=sotto" },
                         "style": "primary"
                     },
                     {
@@ -79,7 +84,7 @@ def handle_follow(event):
                     },
                     {
                         "type": "button",
-                        "action": { "type": "postback", "label": "🌱本気コース", "data": "course=honki" },
+                        "action": { "type": "postback", "label": "🌈本気コース", "data": "course=honki" },
                         "style": "primary"
                     }
                 ]

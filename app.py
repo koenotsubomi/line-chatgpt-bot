@@ -39,7 +39,7 @@ def save_courses(data):
 with open(COURSE_FILE, 'w') as f:
 json.dump(data, f)
 
-# ユーザーの会話履歴(カウント)を保存・更新
+ユーザーの会話履歴(カウント)を保存・更新
 
 def update_user_history(user_id):
 histories = {}

@@ -9,7 +9,7 @@ MessageEvent, TextMessage, TextSendMessage,
 FollowEvent, FlexSendMessage, PostbackEvent
 )
 
-app = Flask(name)
+app = Flask(__name__)
 
 # 環境変数からAPIキー取得
 
@@ -27,14 +27,15 @@ HISTORY_FILE = "user_histories.json"
 # ユーザーコース読み書き関数
 
 def load_courses():
-try:
-if not os.path.exists(COURSE_FILE):
-return {}
-with open(COURSE_FILE, 'r') as f:
-return json.load(f)
-except Exception as e:
-print(f"load_courses error: {e}")
-return {}
+    try:
+        if not os.path.exists(COURSE_FILE):
+            return {}
+        with open(COURSE_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"load_courses error: {e}")
+        return {}
+
 
 def save_courses(data):
 with open(COURSE_FILE, 'w') as f:
@@ -297,6 +298,7 @@ line_bot_api.reply_message(
     TextSendMessage(text=reply_text)
 )
 
-if name == "main":
-port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+

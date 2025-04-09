@@ -38,24 +38,26 @@ def load_courses():
 
 
 def save_courses(data):
-with open(COURSE_FILE, 'w') as f:
-json.dump(data, f)
+    with open(COURSE_FILE, 'w') as f:
+        json.dump(data, f)
+
 
 # ユーザー会話履歴(カウント)を保存・更新
 
 def update_user_history(user_id):
-histories = {}
-if os.path.exists(HISTORY_FILE):
-with open(HISTORY_FILE, 'r') as f:
-try:
-histories = json.load(f)
-except:
-histories = {}
-count = histories.get(user_id, 0) + 1
-histories[user_id] = count
-with open(HISTORY_FILE, 'w') as f:
-json.dump(histories, f)
-return count
+    histories = {}
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, 'r') as f:
+            try:
+                histories = json.load(f)
+            except:
+                histories = {}
+    count = histories.get(user_id, 0) + 1
+    histories[user_id] = count
+    with open(HISTORY_FILE, 'w') as f:
+        json.dump(histories, f)
+    return count
+
 
 # systemプロンプト
 
@@ -156,10 +158,11 @@ SYSTEM_PROMPTS = {
 
 
 def select_prompt(selected, message_count):
-if message_count == 1:
-return SYSTEM_PROMPTS.get(selected, {}).get('initial', '')
-else:
-return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
+    if message_count == 1:
+        return SYSTEM_PROMPTS.get(selected, {}).get('initial', '')
+    else:
+        return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
+
 
 @app.route("/webhook", methods=['POST'])
 def webhook():
@@ -174,8 +177,9 @@ def webhook():
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
-data = event.postback.data
-user_id = event.source.user_id
+    data = event.postback.data
+    user_id = event.source.user_id
+
 
 if data.startswith("course="):
     selected_course = data.split("=")[1]
@@ -225,78 +229,133 @@ if data.startswith("course="):
         TextSendMessage(text=f"「{selected_course}」コースを選択しました！いつでも話しかけてくださいね🌸")
     )
 
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    data = event.postback.data
+    user_id = event.source.user_id
+
+    if data.startswith("course="):
+        selected_course = data.split("=")[1]
+
+        user_data = load_courses()
+        user_info = user_data.get(user_id, {
+            "courses": [],
+            "is_premium": False,
+            "is_platinum": False
+        })
+
+        if selected_course in user_info["courses"]:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"「{selected_course}」コースはすでにご利用中です。いつでも話しかけてくださいね🌷")
+            )
+            return
+
+        if user_info["is_premium"]:
+            user_info["courses"].append(selected_course)
+            user_data[user_id] = user_info
+            save_courses(user_data)
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"「{selected_course}」コースを追加しました！いつでも話しかけてくださいね☕")
+            )
+            return
+
+        if len(user_info["courses"]) >= 1:
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(
+                    text=(
+                        f"「{selected_course}」コースを追加するにはオプション（+300円/月）が必要です。\n\n"
+                        "もしくは、プレミアム会員になるとすべてのコースが使い放題です✨\n"
+                        "▶ プレミアムに登録する\n▶ このコースだけ使いたい"
+                    )
+                )
+            )
+            return
+
+        user_info["courses"].append(selected_course)
+        user_data[user_id] = user_info
+        save_courses(user_data)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=f"「{selected_course}」コースを選択しました！いつでも話しかけてくださいね🌸")
+        )
+
+
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-user_message = event.message.text
-user_id = event.source.user_id
+    user_message = event.message.text
+    user_id = event.source.user_id
 
-if user_message.strip() == "コース変更":
-    course_flex = FlexSendMessage(
-        alt_text="お話スタイルを選んでください",
-        contents={
-            "type": "bubble",
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "spacing": "md",
-                "contents": [
-                    {
-                        "type": "text",
-                        "text": "🌱お話スタイルを選んでください🍀",
-                        "weight": "bold",
-                        "size": "md",
-                        "wrap": True
-                    },
-                    {
-                        "type": "button",
-                        "action": {"type": "postback", "label": "☕そっとこぼす", "data": "course=sotto"},
-                        "style": "primary"
-                    },
-                    {
-                        "type": "button",
-                        "action": {"type": "postback", "label": "🤝寄り添い", "data": "course=yorisoi"},
-                        "style": "primary"
-                    },
-                    {
-                        "type": "button",
-                        "action": {"type": "postback", "label": "🔥喝とやさしい", "data": "course=katsu"},
-                        "style": "primary"
-                    },
-                    {
-                        "type": "button",
-                        "action": {"type": "postback", "label": "🌈本気", "data": "course=honki"},
-                        "style": "primary"
-                    }
-                ]
+    if user_message.strip() == "コース変更":
+        course_flex = FlexSendMessage(
+            alt_text="お話スタイルを選んでください",
+            contents={
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "spacing": "md",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": "🌱お話スタイルを選んでください🍀",
+                            "weight": "bold",
+                            "size": "md",
+                            "wrap": True
+                        },
+                        {
+                            "type": "button",
+                            "action": {"type": "postback", "label": "☕そっとこぼす", "data": "course=sotto"},
+                            "style": "primary"
+                        },
+                        {
+                            "type": "button",
+                            "action": {"type": "postback", "label": "🤝寄り添い", "data": "course=yorisoi"},
+                            "style": "primary"
+                        },
+                        {
+                            "type": "button",
+                            "action": {"type": "postback", "label": "🔥喝とやさしい", "data": "course=katsu"},
+                            "style": "primary"
+                        },
+                        {
+                            "type": "button",
+                            "action": {"type": "postback", "label": "🌈本気", "data": "course=honki"},
+                            "style": "primary"
+                        }
+                    ]
+                }
             }
-        }
+        )
+        line_bot_api.reply_message(event.reply_token, course_flex)
+        return
+
+    user_data = load_courses()
+    user_info = user_data.get(user_id, {"courses": ["sotto"], "is_premium": False})
+    selected = user_info["courses"][0] if user_info["courses"] else "sotto"
+    message_count = update_user_history(user_id)
+    prompt = select_prompt(selected, message_count)
+    full_prompt = f"{prompt}\nママのつぶやき：『{user_message}』に対して、返事："
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.8,
+            max_tokens=120
+        )
+        reply_text = response.choices[0].message['content'].strip()
+    except Exception as e:
+        print(f"ChatGPT API error: {e}")
+        reply_text = "ごめんなさい、少し時間をおいて再度お試しください。"
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
     )
-    line_bot_api.reply_message(event.reply_token, course_flex)
-    return
 
-user_data = load_courses()
-user_info = user_data.get(user_id, {"courses": ["sotto"], "is_premium": False})
-selected = user_info["courses"][0] if user_info["courses"] else "sotto"
-message_count = update_user_history(user_id)
-prompt = select_prompt(selected, message_count)
-full_prompt = f"{prompt}\nママのつぶやき：『{user_message}』に対して、返事："
-
-try:
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": full_prompt}],
-        temperature=0.8,
-        max_tokens=120
-    )
-    reply_text = response.choices[0].message['content'].strip()
-except Exception as e:
-    print(f"ChatGPT API error: {e}")
-    reply_text = "ごめんなさい、少し時間をおいて再度お試しください。"
-
-line_bot_api.reply_message(
-    event.reply_token,
-    TextSendMessage(text=reply_text)
-)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

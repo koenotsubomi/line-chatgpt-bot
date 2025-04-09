@@ -226,9 +226,53 @@ if data.startswith("course="):
 def handle_message(event):
 user_message = event.message.text
 user_id = event.source.user_id
+
+if user_message.strip() == "コース変更":
+    course_flex = FlexSendMessage(
+        alt_text="お話スタイルを選んでください",
+        contents={
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "md",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "🌱お話スタイルを選んでください🍀",
+                        "weight": "bold",
+                        "size": "md",
+                        "wrap": True
+                    },
+                    {
+                        "type": "button",
+                        "action": {"type": "postback", "label": "☕そっとこぼす", "data": "course=sotto"},
+                        "style": "primary"
+                    },
+                    {
+                        "type": "button",
+                        "action": {"type": "postback", "label": "🤝寄り添い", "data": "course=yorisoi"},
+                        "style": "primary"
+                    },
+                    {
+                        "type": "button",
+                        "action": {"type": "postback", "label": "🔥喝とやさしい", "data": "course=katsu"},
+                        "style": "primary"
+                    },
+                    {
+                        "type": "button",
+                        "action": {"type": "postback", "label": "🌈本気", "data": "course=honki"},
+                        "style": "primary"
+                    }
+                ]
+            }
+        }
+    )
+    line_bot_api.reply_message(event.reply_token, course_flex)
+    return
+
 user_data = load_courses()
 user_info = user_data.get(user_id, {"courses": ["sotto"], "is_premium": False})
-
 selected = user_info["courses"][0] if user_info["courses"] else "sotto"
 message_count = update_user_history(user_id)
 prompt = select_prompt(selected, message_count)
@@ -254,6 +298,7 @@ line_bot_api.reply_message(
 if name == "main":
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
+
 
 
 

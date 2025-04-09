@@ -162,13 +162,14 @@ return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
 
 @app.route("/webhook", methods=['POST'])
 def webhook():
-signature = request.headers['X-Line-Signature']
-body = request.get_data(as_text=True)
-try:
-handler.handle(body, signature)
-except InvalidSignatureError:
-abort(400)
-return 'OK'
+    signature = request.headers['X-Line-Signature']
+    body = request.get_data(as_text=True)
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+    return 'OK'
+
 
 @handler.add(PostbackEvent)
 def handle_postback(event):

@@ -27,18 +27,18 @@ HISTORY_FILE = "user_histories.json"
 # ユーザーコース読み書き関数
 
 def load_courses():
-    try:
-        if not os.path.exists(COURSE_FILE):
-            return {}
-        with open(COURSE_FILE, 'r') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"load_courses error: {e}")
-        return {}
+try:
+if not os.path.exists(COURSE_FILE):
+return {}
+with open(COURSE_FILE, 'r') as f:
+return json.load(f)
+except Exception as e:
+print(f"load_courses error: {e}")
+return {}
 
 def save_courses(data):
-    with open(COURSE_FILE, 'w') as f:
-        json.dump(data, f)
+with open(COURSE_FILE, 'w') as f:
+json.dump(data, f)
 
 # ユーザー会話履歴(カウント)を保存・更新
 
@@ -154,6 +154,12 @@ SYSTEM_PROMPTS = {
 }
 
 
+def select_prompt(selected, message_count):
+if message_count == 1:
+return SYSTEM_PROMPTS.get(selected, {}).get('initial', '')
+else:
+return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
+
 @app.route("/webhook", methods=['POST'])
 def webhook():
 signature = request.headers['X-Line-Signature']
@@ -163,12 +169,6 @@ handler.handle(body, signature)
 except InvalidSignatureError:
 abort(400)
 return 'OK'
-
-def select_prompt(selected, message_count):
-if message_count == 1:
-return "最初の会話プロンプト（例：やさしく話しかけてください）"
-else:
-return "フォローアップ用プロンプト（例：続きをやさしく聞いてください）"
 
 @handler.add(PostbackEvent)
 def handle_postback(event):

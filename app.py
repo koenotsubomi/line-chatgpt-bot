@@ -11,7 +11,7 @@ FollowEvent, FlexSendMessage, PostbackEvent
 
 app = Flask(name)
 
-環境変数からAPIキー取得
+# 環境変数からAPIキー取得
 
 LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
@@ -24,7 +24,7 @@ openai.api_key = OPENAI_API_KEY
 COURSE_FILE = "user_courses.json"
 HISTORY_FILE = "user_histories.json"
 
-ユーザーコース読み書き関数
+# ユーザーコース読み書き関数
 
 def load_courses():
     try:
@@ -40,7 +40,7 @@ def save_courses(data):
     with open(COURSE_FILE, 'w') as f:
         json.dump(data, f)
 
-ユーザー会話履歴(カウント)を保存・更新
+# ユーザー会話履歴(カウント)を保存・更新
 
 def update_user_history(user_id):
 histories = {}

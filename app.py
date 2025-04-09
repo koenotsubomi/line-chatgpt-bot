@@ -165,9 +165,9 @@ return 'OK'
 
 def select_prompt(selected, message_count):
 if message_count == 1:
-return SYSTEM_PROMPTS.get(selected, {}).get('initial', '')
+return "最初の会話プロンプト（例：やさしく話しかけてください）"
 else:
-return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
+return "フォローアップ用プロンプト（例：続きをやさしく聞いてください）"
 
 @handler.add(PostbackEvent)
 def handle_postback(event):
@@ -298,8 +298,3 @@ line_bot_api.reply_message(
 if name == "main":
 port = int(os.environ.get("PORT", 5000))
 app.run(host="0.0.0.0", port=port)
-
-
-
-
-

@@ -5,13 +5,14 @@ import json
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage,
-    FollowEvent, FlexSendMessage, PostbackEvent
+MessageEvent, TextMessage, TextSendMessage,
+FollowEvent, FlexSendMessage, PostbackEvent
 )
 
-app = Flask(__name__)
+app = Flask(name)
 
-# 環境変数からAPIキー取得
+環境変数からAPIキー取得
+
 LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -23,34 +24,36 @@ openai.api_key = OPENAI_API_KEY
 COURSE_FILE = "user_courses.json"
 HISTORY_FILE = "user_histories.json"
 
-# ユーザーコース読み書き関数
+ユーザーコース読み書き関数
+
 def load_courses():
-    try:
-        if not os.path.exists(COURSE_FILE):
-            return {}
-        with open(COURSE_FILE, 'r') as f:
-            return json.load(f)
-    except:
-        return {}
+try:
+if not os.path.exists(COURSE_FILE):
+return {}
+with open(COURSE_FILE, 'r') as f:
+return json.load(f)
+except:
+return {}
 
 def save_courses(data):
-    with open(COURSE_FILE, 'w') as f:
-        json.dump(data, f)
+with open(COURSE_FILE, 'w') as f:
+json.dump(data, f)
 
-# ユーザー会話履歴(カウント)を保存・更新
+ユーザー会話履歴(カウント)を保存・更新
+
 def update_user_history(user_id):
-    histories = {}
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, 'r') as f:
-            try:
-                histories = json.load(f)
-            except:
-                histories = {}
-    count = histories.get(user_id, 0) + 1
-    histories[user_id] = count
-    with open(HISTORY_FILE, 'w') as f:
-        json.dump(histories, f)
-    return count
+histories = {}
+if os.path.exists(HISTORY_FILE):
+with open(HISTORY_FILE, 'r') as f:
+try:
+histories = json.load(f)
+except:
+histories = {}
+count = histories.get(user_id, 0) + 1
+histories[user_id] = count
+with open(HISTORY_FILE, 'w') as f:
+json.dump(histories, f)
+return count
 
 # systemプロンプト
 
@@ -152,51 +155,106 @@ SYSTEM_PROMPTS = {
 
 @app.route("/webhook", methods=['POST'])
 def webhook():
-    signature = request.headers['X-Line-Signature']
-    body = request.get_data(as_text=True)
-    try:
-        handler.handle(body, signature)
-    except InvalidSignatureError:
-        abort(400)
-    return 'OK'
+signature = request.headers['X-Line-Signature']
+body = request.get_data(as_text=True)
+try:
+handler.handle(body, signature)
+except InvalidSignatureError:
+abort(400)
+return 'OK'
 
 def select_prompt(selected, message_count):
-    if message_count == 1:
-        return SYSTEM_PROMPTS.get(selected, {}).get('initial', '')
-    else:
-        return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
+if message_count == 1:
+return SYSTEM_PROMPTS.get(selected, {}).get('initial', '')
+else:
+return SYSTEM_PROMPTS.get(selected, {}).get('follow_up', '')
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+data = event.postback.data
+user_id = event.source.user_id
+
+if data.startswith("course="):
+    selected_course = data.split("=")[1]
+
+    user_data = load_courses()
+    user_info = user_data.get(user_id, {
+        "courses": [],
+        "is_premium": False,
+        "is_platinum": False
+    })
+
+    if selected_course in user_info["courses"]:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=f"「{selected_course}」コースはすでにご利用中です。いつでも話しかけてくださいね🌷")
+        )
+        return
+
+    if user_info["is_premium"]:
+        user_info["courses"].append(selected_course)
+        user_data[user_id] = user_info
+        save_courses(user_data)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=f"「{selected_course}」コースを追加しました！いつでも話しかけてくださいね☕")
+        )
+        return
+
+    if len(user_info["courses"]) >= 1:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(
+                text=(
+                    f"「{selected_course}」コースを追加するにはオプション（+300円/月）が必要です。\n\n"
+                    "もしくは、プレミアム会員になるとすべてのコースが使い放題です✨\n"
+                    "▶ プレミアムに登録する\n▶ このコースだけ使いたい"
+                )
+            )
+        )
+        return
+
+    user_info["courses"].append(selected_course)
+    user_data[user_id] = user_info
+    save_courses(user_data)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=f"「{selected_course}」コースを選択しました！いつでも話しかけてくださいね🌸")
+    )
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_message = event.message.text
-    user_id = event.source.user_id
-    courses = load_courses()
-    selected = courses.get(user_id, "sotto")
+user_message = event.message.text
+user_id = event.source.user_id
+user_data = load_courses()
+user_info = user_data.get(user_id, {"courses": ["sotto"], "is_premium": False})
 
-    message_count = update_user_history(user_id)
-    prompt = select_prompt(selected, message_count)
-    full_prompt = f"{prompt}\nママのつぶやき：『{user_message}』に対して、返事："
+selected = user_info["courses"][0] if user_info["courses"] else "sotto"
+message_count = update_user_history(user_id)
+prompt = select_prompt(selected, message_count)
+full_prompt = f"{prompt}\nママのつぶやき：『{user_message}』に対して、返事："
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": full_prompt}],
-            temperature=0.8,
-            max_tokens=120
-        )
-        reply_text = response.choices[0].message['content'].strip()
-    except Exception as e:
-        print(f"ChatGPT API error: {e}")
-        reply_text = "ごめんなさい、少し時間をおいて再度お試しください。"
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
+try:
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": full_prompt}],
+        temperature=0.8,
+        max_tokens=120
     )
+    reply_text = response.choices[0].message['content'].strip()
+except Exception as e:
+    print(f"ChatGPT API error: {e}")
+    reply_text = "ごめんなさい、少し時間をおいて再度お試しください。"
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+line_bot_api.reply_message(
+    event.reply_token,
+    TextSendMessage(text=reply_text)
+)
+
+if name == "main":
+port = int(os.environ.get("PORT", 5000))
+app.run(host="0.0.0.0", port=port)
+
 
 
 

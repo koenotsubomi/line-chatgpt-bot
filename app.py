@@ -37,8 +37,8 @@ def load_courses():
         return {}
 
 def save_courses(data):
-with open(COURSE_FILE, 'w') as f:
-json.dump(data, f)
+    with open(COURSE_FILE, 'w') as f:
+        json.dump(data, f)
 
 ユーザー会話履歴(カウント)を保存・更新
 

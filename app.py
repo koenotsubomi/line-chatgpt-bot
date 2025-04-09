@@ -27,13 +27,14 @@ HISTORY_FILE = "user_histories.json"
 ユーザーコース読み書き関数
 
 def load_courses():
-try:
-if not os.path.exists(COURSE_FILE):
-return {}
-with open(COURSE_FILE, 'r') as f:
-return json.load(f)
-except:
-return {}
+    try:
+        if not os.path.exists(COURSE_FILE):
+            return {}
+        with open(COURSE_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"load_courses error: {e}")
+        return {}
 
 def save_courses(data):
 with open(COURSE_FILE, 'w') as f:
